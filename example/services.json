@@ -1,0 +1,29 @@
+{
+  "path": "../dist/example",
+  "driver": "example-driver",
+  "docker": {
+    "from": "node",
+    "script": "build",
+    "image": "example"
+  },
+  "services": {
+    "main": {
+      "entrypoint": "src/index",
+      "settings": {
+        "hub": true,
+        "port": 1234
+      }
+    },
+    "worker-1": {
+      "amount": 2,
+      "settings": {
+        "environment": {
+          "test": "Test"
+        }
+      }
+    },
+    "worker-2": {
+      "amount": 5
+    }
+  }
+}

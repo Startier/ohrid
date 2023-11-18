@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+BINDIR=$(dirname $0)
+PACKAGEDIR=$BINDIR/../@startier/ohrid
+SCRIPT=$PACKAGEDIR/dist/cli/index.js
+TS_NODE_BASEURL="$PACKAGEDIR/dist" node -r tsconfig-paths/register "$SCRIPT" "$@"
