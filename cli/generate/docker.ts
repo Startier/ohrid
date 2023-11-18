@@ -59,7 +59,6 @@ async function generateDockerfile(config: Config) {
 FROM ${from} AS deps
 ${await generateFromDriver("beforeDeps")}
 WORKDIR /app
-
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 RUN \
   if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
@@ -69,7 +68,6 @@ RUN \
   fi
 ${await generateFromDriver("afterDeps")}
 
-
 FROM ${from} AS builder
 ${await generateFromDriver("beforeBuild")}
 WORKDIR /app
@@ -78,18 +76,13 @@ COPY . .
 RUN npm run ${script}
 ${await generateFromDriver("afterBuild")}
 
-
 FROM ${from} AS runner
 ${await generateFromDriver("beforeRunner")}
-WORKDIR /app
-
 ENV NODE_ENV production
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 ohrid
-
-COPY --from=builder --chown=ohrid:nodejs /app /app
+RUN adduser --system --group --home /app ohrid
+COPY --from=builder --chown=ohrid:ohrid /app /app
 USER ohrid
+WORKDIR /app
 ${await generateFromDriver("afterRunner")}
 `;
 
