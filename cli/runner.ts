@@ -28,7 +28,7 @@ export default async function start(name: string) {
     services[name] = {};
   }
 
-  const driver = await getDriverFromConfig(config);
+  const driver = await getDriverFromConfig(config, name);
   if (!driver) {
     log("error", `No driver was defined for service '${name}'`);
     throw 1;
