@@ -1,6 +1,6 @@
 {
   "name": "@startier/ohrid",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A library for managing distributed nodes",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",

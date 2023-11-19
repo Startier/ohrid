@@ -1,5 +1,18 @@
-#!/usr/bin/env bash
-BINDIR=$(dirname $0)
-PACKAGEDIR=$BINDIR/../@startier/ohrid
-SCRIPT=$PACKAGEDIR/dist/cli/index.js
-TS_NODE_BASEURL="$PACKAGEDIR/dist" node -r tsconfig-paths/register "$SCRIPT" "$@"
+#!/usr/bin/env node
+const { execFile } = require("child_process");
+const path = require("path");
+const binDir = path.dirname(process.argv[1]);
+const packageDir = path.resolve(binDir, "..", "@startier/ohrid");
+const script = path.resolve(packageDir, "dist/cli/index.js");
+const distUrl = path.resolve(packageDir, "dist");
+
+const child = execFile(
+  process.argv[0],
+  ["-r", "tsconfig-paths/register", script, ...process.argv.slice(2)],
+  {
+    env: { ...process.env, TS_NODE_BASEURL: distUrl },
+  }
+);
+child.stdout.pipe(process.stdout);
+child.stderr.pipe(process.stderr);
+process.stdin.pipe(child.stdin);
