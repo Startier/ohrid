@@ -1,6 +1,6 @@
 {
   "path": "../dist/example",
-  "driver": "example-driver",
+  "driver": "@startier/ohrid-jsonrpc-driver",
   "docker": {
     "from": "node",
     "script": "build",
