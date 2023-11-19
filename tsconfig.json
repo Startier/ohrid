@@ -11,11 +11,7 @@
     "removeComments": true,
     "declaration": true,
     "incremental": true,
-    "baseUrl": ".",
-    "paths": {
-      "@startier/ohrid/*": ["lib/*"],
-      "@startier/ohrid": ["lib"]
-    }
+    "baseUrl": "."
   },
   "lib": ["esnext"],
   "exclude": ["node_modules", "dist/**/*"]
