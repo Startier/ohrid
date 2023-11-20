@@ -1,3 +1,4 @@
+import { flags, parseFlags } from "./flags";
 import generate from "./generator";
 import log from "./log";
 import start from "./runner";
@@ -7,7 +8,7 @@ Usage: ohrid OPERATION
 Manage services according to the operation and it's arguments.
 
 Operations are:
-    help / --help           display this help and exit
+    help                    display this help and exit
     generate  RESOURCE      generate a resource
     start     SERVICE       start a service
     
@@ -41,6 +42,8 @@ export default async function main(args: string[]): Promise<number | void> {
     log("error", "Invalid syntax\nTry 'ohrid --help' for more information.");
     return;
   }
+  args = parseFlags(args);
+
   switch (args[0]) {
     case "help":
     case "--help":
