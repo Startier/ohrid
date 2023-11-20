@@ -1,10 +1,20 @@
 import { readdir } from "fs/promises";
 import log from "./log";
-import { getCurrentConfig } from "./config";
-import { Client, Method } from "../lib";
+import { Config, getCurrentConfig } from "./config";
+import { Client, Method, ServiceConfig } from "../lib";
 import { resolve } from "path";
-import { runService } from "./service";
 import { getDriverFromConfig } from "./driver";
+import { runService } from "../lib/service";
+
+function getServiceConfig(name: string, config: Config): ServiceConfig {
+  config.services ??= {};
+  config.services[name] ??= {};
+  config.services[name].settings = {
+    ...(config.services[name].settings ?? {}),
+    ...(config.settings ?? {}),
+  };
+  return config.services[name];
+}
 
 const getFiles = async (source: string) =>
   (await readdir(source, { withFileTypes: true })).map((dirent) => dirent.name);
@@ -85,5 +95,13 @@ export default async function start(name: string) {
       Object.entries(rpcMethods).length
     } method(s)`
   );
-  await runService(name, services[name], rpcMethods, driver, entrypoint);
+
+  const context = driver.createNode(
+    name,
+    getServiceConfig(name, config),
+    rpcMethods,
+    log
+  );
+
+  await runService(context, entrypoint);
 }

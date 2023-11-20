@@ -10,8 +10,7 @@
     "allowSyntheticDefaultImports": true,
     "removeComments": true,
     "declaration": true,
-    "incremental": true,
-    "baseUrl": "."
+    "incremental": true
   },
   "lib": ["esnext"],
   "exclude": ["node_modules", "dist/**/*"]
