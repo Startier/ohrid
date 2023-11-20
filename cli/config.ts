@@ -9,6 +9,7 @@ export type Config = {
   services?: Record<string, ServiceConfig>;
   driver?: ServiceConfig["driver"];
   docker?: DockerConfig;
+  settings?: ServiceConfig["settings"];
 };
 
 export type DockerConfig = {
