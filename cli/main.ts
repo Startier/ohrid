@@ -39,39 +39,29 @@ function help() {
 
 export default async function main(args: string[]): Promise<number | void> {
   if (args.length === 0) {
-    log("error", "Invalid syntax\nTry 'ohrid --help' for more information.");
+    log("error", "Invalid syntax\nTry 'ohrid help' for more information.");
     return;
   }
   args = parseFlags(args);
 
   switch (args[0]) {
     case "help":
-    case "--help":
       if (args.length !== 1) {
-        log(
-          "error",
-          "Invalid syntax\nTry 'ohrid --help' for more information."
-        );
+        log("error", "Invalid syntax\nTry 'ohrid help' for more information.");
         return;
       }
       help();
       break;
     case "generate":
       if (args.length < 2) {
-        log(
-          "error",
-          "Invalid syntax\nTry 'ohrid --help' for more information."
-        );
+        log("error", "Invalid syntax\nTry 'ohrid help' for more information.");
         return;
       }
       await generate(args[1], ...args.slice(2));
       break;
     case "start":
       if (args.length !== 2) {
-        log(
-          "error",
-          "Invalid syntax\nTry 'ohrid --help' for more information."
-        );
+        log("error", "Invalid syntax\nTry 'ohrid help' for more information.");
         return;
       }
       await start(args[1]);
@@ -79,7 +69,7 @@ export default async function main(args: string[]): Promise<number | void> {
     default:
       log(
         "error",
-        `Unrecognized operation '${args[0]}'\nTry 'ohrid --help' for more information.`
+        `Unrecognized operation '${args[0]}'\nTry 'ohrid help' for more information.`
       );
   }
 }
