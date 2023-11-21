@@ -1,30 +1,35 @@
-import { resolve } from "path";
 import { Driver } from "../lib";
 import log from "./log";
 import { Config } from "./config";
 import { resolveBasePath } from "./resolve";
+import { importResource } from "./imports";
 
 async function loadDriver(path: string, driverPath: string) {
   let driver: Driver | undefined;
   try {
     log("debug", `Loading driver '${driverPath}'...`);
-    const driverImport: {
-      default: Driver;
-    } = await import(resolve(`${path}/${driverPath}`));
-    driver = driverImport.default;
+    driver = await importResource<Driver, "driver">(
+      `${path}/${driverPath}`,
+      "driver"
+    );
   } catch {
     try {
       log("debug", `Loading driver '${driverPath}' from modules...`);
-
-      const driverImport: {
-        default: Driver;
-      } = await import(`${driverPath}`);
-      driver = driverImport.default;
+      driver = await importResource<Driver, "driver">(
+        `${driverPath}`,
+        "driver"
+      );
     } catch {
       log("error", `Failed importing driver: ${driverPath}`);
       throw 1;
     }
   }
+
+  if (!driver) {
+    log("error", `'${driverPath}' has no export 'driver' or 'default'`);
+    throw 1;
+  }
+
   return driver;
 }
 
