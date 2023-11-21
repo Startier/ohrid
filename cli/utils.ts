@@ -12,7 +12,43 @@ import { open } from "fs/promises";
 import { getRelativeDirOfFile, openFile, resolvePath } from "./resolve";
 import { Config } from "./config";
 
-export async function getPackageDirectory(): Promise<string> {
+export async function shouldGenerateTypescript(
+  config: Config
+): Promise<boolean> {
+  if (typeof config.typescript === "boolean") {
+    return config.typescript;
+  }
+  const packageDirectory = await getPackageDirectory();
+  const packageJson = JSON.parse(
+    await loadTextFile("package.json", packageDirectory)
+  ) as unknown;
+
+  if (
+    typeof packageJson === "object" &&
+    packageJson !== null &&
+    "dependencies" in packageJson &&
+    typeof packageJson.dependencies === "object" &&
+    (packageJson.dependencies as Record<string, any>["typescript"])
+  ) {
+    config.typescript = true;
+    return true;
+  }
+  if (
+    typeof packageJson === "object" &&
+    packageJson !== null &&
+    "devDependencies" in packageJson &&
+    typeof packageJson.devDependencies === "object" &&
+    (packageJson.devDependencies as Record<string, any>["typescript"])
+  ) {
+    config.typescript = true;
+    return true;
+  }
+
+  config.typescript = false;
+  return false;
+}
+
+export function getPackageDirectory(): Promise<string> {
   return getRelativeDirOfFile("package.json");
 }
 
