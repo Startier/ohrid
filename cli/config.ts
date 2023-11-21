@@ -1,10 +1,8 @@
-import { subjectFromReadStream } from "@mojsoski/streams-io";
 import log from "./log";
-import { blockFromSubject } from "@mojsoski/streams";
 import { ServiceConfig } from "../lib";
 import { flags } from "./flags";
-import { openFile, resolveRelativeDir } from "./resolve";
-import { dumpFile } from "./utils";
+import { resolveRelativeDir } from "./resolve";
+import { dumpFile, loadTextFile } from "./utils";
 
 export type Config = {
   path?: string;
@@ -13,6 +11,8 @@ export type Config = {
   docker?: DockerConfig;
   settings?: ServiceConfig["settings"];
   relativeDir: string;
+  typescript?: boolean;
+  exports?: "named" | "default";
 };
 
 export type DockerConfig = {
@@ -27,7 +27,7 @@ export async function saveConfiguration(config: Config) {
   const processedConfig: Partial<Config> = { ...config };
   delete processedConfig.relativeDir;
   await dumpFile(
-    JSON.stringify(processedConfig, undefined, 2),
+    JSON.stringify(processedConfig, undefined, 2) + "\n",
     "services.json",
     config
   );
@@ -42,16 +42,7 @@ export async function getCurrentConfig(): Promise<Config> {
   log("debug", `Current config: ${relativeDir}/services.json`);
   let file = "";
   try {
-    const decoder = new TextDecoder();
-    file = Array.from(
-      await blockFromSubject(
-        subjectFromReadStream(
-          (await openFile("services.json", relativeDir)).createReadStream()
-        )
-      )
-        .map((buffer) => decoder.decode(buffer))
-        .sync()
-    ).join("");
+    file = await loadTextFile("services.json", relativeDir);
   } catch {
     log("warning", "Failed reading services.json");
     return { relativeDir };

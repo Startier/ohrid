@@ -36,21 +36,22 @@ export async function openFile(
 }
 
 export async function resolveRelativeDir() {
+  return await getRelativeDirOfFile("services.json");
+}
+
+export async function getRelativeDirOfFile(file: string) {
   let relativeDir = process.cwd();
 
   do {
     const items = await readdir(relativeDir);
-    if (items.includes("services.json")) {
+    if (items.includes(file)) {
       break;
     }
     relativeDir = resolve(relativeDir, "..");
   } while (resolve(relativeDir, "..") !== relativeDir);
 
-  if (!(await readdir(relativeDir)).includes("services.json")) {
-    log(
-      "error",
-      "Reached top of filesystem and couldn't find service configuration"
-    );
+  if (!(await readdir(relativeDir)).includes(file)) {
+    log("error", `Reached top of filesystem and couldn't find '${file}'`);
     throw 1;
   }
 

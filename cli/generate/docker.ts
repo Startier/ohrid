@@ -1,9 +1,16 @@
-import { dumpFile } from "../utils";
+import { dumpFile, getPackageDirectory } from "../utils";
 import { Config } from "../config";
 import { getDriverFromConfig } from "../driver";
 import log from "../log";
+import { relative, resolve } from "path";
 
 async function generateDockerfile(config: Config) {
+  const packageDir = await getPackageDirectory();
+  const relativePackagePath = relative(
+    resolve(packageDir),
+    resolve(config.relativeDir)
+  );
+
   const generateFromDriver = async (
     place:
       | "beforeDeps"
@@ -82,7 +89,7 @@ ENV NODE_ENV production
 RUN adduser --system --group --home /app ohrid
 COPY --from=builder --chown=ohrid:ohrid /app /app
 USER ohrid
-WORKDIR /app
+WORKDIR /app/${relativePackagePath}
 ${await generateFromDriver("afterRunner")}
 `;
 
@@ -90,6 +97,16 @@ ${await generateFromDriver("afterRunner")}
 }
 
 async function generateDockerCompose(config: Config) {
+  const packageDir = await getPackageDirectory();
+  const relativePackagePath = relative(
+    resolve(packageDir),
+    resolve(config.relativeDir)
+  );
+  const relativeToPackagePath = relative(
+    resolve(config.relativeDir),
+    resolve(packageDir)
+  );
+
   let result = "";
   let spaces = 0;
 
@@ -123,7 +140,11 @@ async function generateDockerCompose(config: Config) {
           if (config.docker?.image) {
             appendLine(`image: ${config.docker.image}`);
           } else {
-            appendLine(`build: .`);
+            appendLine(`build:`);
+            await block(async () => {
+              appendLine(`context: ./${relativeToPackagePath}`);
+              appendLine(`dockerfile: ./${relativePackagePath}/Dockerfile`);
+            });
           }
           appendLine(`command: npx ohrid start ${service}`);
           await driver?.handleDockerCompose({
@@ -142,10 +163,17 @@ async function generateDockerCompose(config: Config) {
 }
 
 async function generateImageBuildScript(config: Config) {
+  const packageDir = await getPackageDirectory();
+  const relativePackagePath = relative(
+    resolve(packageDir),
+    resolve(config.relativeDir)
+  );
   await dumpFile(
     `
 #!/bin/sh
-docker build . --tag ${config.docker?.image}
+docker build  ${JSON.stringify(resolve(packageDir))} -f ${JSON.stringify(
+      `${relativePackagePath}/Dockerfile`
+    )} --tag ${config.docker?.image}
 `.trim(),
     "build-image.sh",
     config
