@@ -1,4 +1,4 @@
-import { flags, parseFlags } from "./flags";
+import { parseFlags } from "./flags";
 import generate from "./generator";
 import log from "./log";
 import start from "./runner";

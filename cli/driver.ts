@@ -2,6 +2,7 @@ import { resolve } from "path";
 import { Driver } from "../lib";
 import log from "./log";
 import { Config } from "./config";
+import { resolveBasePath } from "./resolve";
 
 async function loadDriver(path: string, driverPath: string) {
   let driver: Driver | undefined;
@@ -32,15 +33,7 @@ export async function getDriverFromConfig(config: Config, name?: string) {
 
   log("debug", `Loading driver for '${name ?? "global"}'`);
   const services = config.services ?? {};
-  let path = config.path;
-  if (typeof path !== "string") {
-    log(
-      "warning",
-      `Invalid path configuration, will fallback to current directory`
-    );
-    path = ".";
-  }
-
+  const path = resolveBasePath(config);
   if (
     name &&
     services[name].driver &&
