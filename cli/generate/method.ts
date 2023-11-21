@@ -1,7 +1,7 @@
 import { mkdir } from "fs/promises";
 import { Config } from "../config";
 import log from "../log";
-import { dumpFile } from "../utils";
+import { dumpFile, shouldGenerateTypescript } from "../utils";
 import { resolvePath } from "../resolve";
 
 export default async function generateMethod(
@@ -25,17 +25,40 @@ export default async function generateMethod(
   }
 
   await mkdir(resolvePath(`rpc/${name}`, config), { recursive: true });
-  await dumpFile(
-    `
-import { declareMethod } from "@startier/ohrid";
 
-export default declareMethod(
-  ${JSON.stringify(service)},
-  async function ${name.replace(/[\W_]+/g, "_")}(client) {
+  const exportType = config.exports === "named" ? "named" : "default";
+  config.exports = exportType;
+
+  const baseMethod = `  
+const method = declareMethod(${JSON.stringify(
+    service
+  )}, async function ${name.replace(/[\W_]+/g, "_")}(client) {}); 
+`;
+  if (await shouldGenerateTypescript(config)) {
+    await dumpFile(
+      `
+import { declareMethod } from "@startier/ohrid";
+${baseMethod}
+${exportType === "named" ? "export { method }" : "export default method"};
+
+  `.trim() + "\n",
+      `rpc/${name}/index.ts`,
+      config
+    );
+  } else {
+    await dumpFile(
+      `
+Object.defineProperty(exports, "__esModule", { value: true });
+const { declareMethod } = require("@startier/ohrid");
+${baseMethod}
+${
+  exportType === "named"
+    ? "exports.method = method"
+    : "exports.default = method"
+};
+  `.trim() + "\n",
+      `rpc/${name}/index.js`,
+      config
+    );
   }
-); 
-`.trim() + "\n",
-    `rpc/${name}/index.ts`,
-    config
-  );
 }
