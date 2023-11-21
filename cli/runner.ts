@@ -5,6 +5,7 @@ import { Client, Method, ServiceConfig } from "../lib";
 import { resolve } from "path";
 import { getDriverFromConfig } from "./driver";
 import { runService } from "../lib/service";
+import { resolveBasePath } from "./resolve";
 
 function getServiceConfig(name: string, config: Config): ServiceConfig {
   config.services ??= {};
@@ -23,14 +24,7 @@ export default async function start(name: string) {
   log("info", `Loading service '${name}'...`);
 
   const services = config.services ?? {};
-  let path = config.path;
-  if (typeof path !== "string") {
-    log(
-      "warning",
-      `Invalid path configuration, will fallback to current directory`
-    );
-    path = ".";
-  }
+  const path = resolveBasePath(config);
 
   if (typeof services[name] !== "object") {
     log("warning", `Invalid service configuration, will fallback to defaults`);

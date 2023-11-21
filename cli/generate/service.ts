@@ -2,6 +2,7 @@ import { mkdir } from "fs/promises";
 import { Config } from "../config";
 import log from "../log";
 import { dumpFile } from "../utils";
+import { resolvePath } from "../resolve";
 
 export default async function generateMethod(
   config: Config,
@@ -33,16 +34,15 @@ export default async function generateMethod(
 
   if (args.length > 2) {
     const entrypoint = args[2];
-    await mkdir(`src/${entrypoint}`, { recursive: true });
+    await mkdir(resolvePath(`src/${entrypoint}`, config), { recursive: true });
     await dumpFile(
       `
 import { Client } from "@startier/ohrid";
 export default async function main(client: Client) {
 }
 `.trim() + "\n",
-      `src/${entrypoint}/index.ts`
+      `src/${entrypoint}/index.ts`,
+      config
     );
   }
-
-  await dumpFile(JSON.stringify(config, undefined, 2), "services.json");
 }

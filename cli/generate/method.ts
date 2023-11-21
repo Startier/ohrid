@@ -2,6 +2,7 @@ import { mkdir } from "fs/promises";
 import { Config } from "../config";
 import log from "../log";
 import { dumpFile } from "../utils";
+import { resolvePath } from "../resolve";
 
 export default async function generateMethod(
   config: Config,
@@ -23,7 +24,7 @@ export default async function generateMethod(
     log("warning", `The service '${service}' is not in 'services.json'.`);
   }
 
-  await mkdir(`rpc/${name}`, { recursive: true });
+  await mkdir(resolvePath(`rpc/${name}`, config), { recursive: true });
   await dumpFile(
     `
 import { declareMethod } from "@startier/ohrid";
@@ -34,6 +35,7 @@ export default declareMethod(
   }
 ); 
 `.trim() + "\n",
-    `rpc/${name}/index.ts`
+    `rpc/${name}/index.ts`,
+    config
   );
 }

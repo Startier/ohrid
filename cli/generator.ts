@@ -1,4 +1,4 @@
-import { getCurrentConfig } from "./config";
+import { getCurrentConfig, saveConfiguration } from "./config";
 import log from "./log";
 
 export default async function generate(resource: string, ...rest: string[]) {
@@ -8,11 +8,12 @@ export default async function generate(resource: string, ...rest: string[]) {
     try {
       log("info", `Generating resource: ${resource}`);
       await importedItem.default(config, ...rest);
+      await saveConfiguration(config);
     } catch (e) {
       if (typeof e === "number") {
         throw e;
       }
-      log("error", "Generation failed");
+      log("error", `Generation failed: ${e}`);
     }
   } catch (e) {
     if (typeof e === "number") {

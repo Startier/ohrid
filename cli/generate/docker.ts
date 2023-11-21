@@ -86,7 +86,7 @@ WORKDIR /app
 ${await generateFromDriver("afterRunner")}
 `;
 
-  await dumpFile(dockerfile, "Dockerfile");
+  await dumpFile(dockerfile, "Dockerfile", config);
 }
 
 async function generateDockerCompose(config: Config) {
@@ -138,7 +138,7 @@ async function generateDockerCompose(config: Config) {
     }
   });
 
-  await dumpFile(result, "docker-compose.yml");
+  await dumpFile(result, "docker-compose.yml", config);
 }
 
 async function generateImageBuildScript(config: Config) {
@@ -147,7 +147,8 @@ async function generateImageBuildScript(config: Config) {
 #!/bin/sh
 docker build . --tag ${config.docker?.image}
 `.trim(),
-    "build-image.sh"
+    "build-image.sh",
+    config
   );
 }
 

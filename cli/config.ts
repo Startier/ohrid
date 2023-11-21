@@ -1,9 +1,10 @@
 import { subjectFromReadStream } from "@mojsoski/streams-io";
 import log from "./log";
-import { open } from "fs/promises";
 import { blockFromSubject } from "@mojsoski/streams";
 import { ServiceConfig } from "../lib";
 import { flags } from "./flags";
+import { openFile, resolveRelativeDir } from "./resolve";
+import { dumpFile } from "./utils";
 
 export type Config = {
   path?: string;
@@ -11,6 +12,7 @@ export type Config = {
   driver?: ServiceConfig["driver"];
   docker?: DockerConfig;
   settings?: ServiceConfig["settings"];
+  relativeDir: string;
 };
 
 export type DockerConfig = {
@@ -21,25 +23,38 @@ export type DockerConfig = {
 
 let cachedConfig: Config | undefined;
 
-export async function getCurrentConfig() {
+export async function saveConfiguration(config: Config) {
+  const processedConfig: Partial<Config> = { ...config };
+  delete processedConfig.relativeDir;
+  await dumpFile(
+    JSON.stringify(processedConfig, undefined, 2),
+    "services.json",
+    config
+  );
+}
+
+export async function getCurrentConfig(): Promise<Config> {
   if (cachedConfig) {
     return cachedConfig;
   }
 
-  log("debug", `Current config: ${process.cwd()}/services.json`);
+  const relativeDir = await resolveRelativeDir();
+  log("debug", `Current config: ${relativeDir}/services.json`);
   let file = "";
   try {
     const decoder = new TextDecoder();
     file = Array.from(
       await blockFromSubject(
-        subjectFromReadStream((await open("services.json")).createReadStream())
+        subjectFromReadStream(
+          (await openFile("services.json", relativeDir)).createReadStream()
+        )
       )
         .map((buffer) => decoder.decode(buffer))
         .sync()
     ).join("");
   } catch {
     log("warning", "Failed reading services.json");
-    return {};
+    return { relativeDir };
   }
   try {
     const config = JSON.parse(file) as Config;
@@ -82,6 +97,7 @@ export async function getCurrentConfig() {
         throw 1;
       }
     }
+    config.relativeDir = relativeDir;
     cachedConfig = config;
     return config;
   } catch (e) {
