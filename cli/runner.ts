@@ -6,6 +6,7 @@ import { resolve } from "path";
 import { getDriverFromConfig } from "./driver";
 import { runService } from "../lib/service";
 import { resolveBasePath } from "./resolve";
+import { importResource } from "./imports";
 
 function getServiceConfig(name: string, config: Config): ServiceConfig {
   config.services ??= {};
@@ -44,20 +45,29 @@ export default async function start(name: string) {
     try {
       log("debug", `Checking method 'rpc/${rpcMethodFile}'`);
 
-      const methodImport: { default: Method } = await import(
-        resolve(`${path}/rpc/${rpcMethodFile}`)
+      const importedMethod = await importResource<Method, "method">(
+        resolve(`${path}/rpc/${rpcMethodFile}`),
+        "method"
       );
-      if (methodImport.default.service !== name) {
+
+      if (!importedMethod) {
+        log(
+          "error",
+          `'rpc/${rpcMethodFile}' has no export 'method' or 'default'`
+        );
+        throw 1;
+      }
+      if (importedMethod.service !== name) {
         continue;
       }
-      if (rpcMethods[methodImport.default.name]) {
+      if (rpcMethods[importedMethod.name]) {
         log(
           "error",
           `'rpc/${rpcMethodFile}' tries to redeclare an already declared RPC method`
         );
         throw 1;
       } else {
-        rpcMethods[methodImport.default.name] = methodImport.default;
+        rpcMethods[importedMethod.name] = importedMethod;
       }
     } catch {
       log("error", `Failed importing RPC method file: rpc/${rpcMethodFile}`);
@@ -70,10 +80,14 @@ export default async function start(name: string) {
     log("info", `Loading entrypoint '${services[name].entrypoint}'...`);
 
     try {
-      const entrypointImport: {
-        default: (client: Client) => Promise<void | boolean>;
-      } = await import(resolve(`${path}/${services[name].entrypoint}`));
-      entrypoint = entrypointImport.default;
+      entrypoint = await importResource<
+        (client: Client) => Promise<void | boolean>,
+        "main"
+      >(resolve(`${path}/${services[name].entrypoint}`), "main");
+
+      if (!entrypoint) {
+        throw 1;
+      }
     } catch {
       log(
         "error",

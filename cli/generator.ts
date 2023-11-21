@@ -1,13 +1,17 @@
 import { getCurrentConfig, saveConfiguration } from "./config";
+import { importResource } from "./imports";
 import log from "./log";
 
 export default async function generate(resource: string, ...rest: string[]) {
   const config = await getCurrentConfig();
   try {
-    const importedItem = await import("./generate/" + resource);
+    const importedItem = await importResource<any, "generate">(
+      "./generate/" + resource,
+      "generate"
+    );
     try {
       log("info", `Generating resource: ${resource}`);
-      await importedItem.default(config, ...rest);
+      await importedItem(config, ...rest);
       await saveConfiguration(config);
     } catch (e) {
       if (typeof e === "number") {
