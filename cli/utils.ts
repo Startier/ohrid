@@ -48,8 +48,8 @@ export async function shouldGenerateTypescript(
   return false;
 }
 
-export function getPackageDirectory(): Promise<string> {
-  return getRelativeDirOfFile("package.json");
+export async function getPackageDirectory(): Promise<string> {
+  return (await getRelativeDirOfFile("package.json")) ?? "";
 }
 
 export async function loadTextFile(file: string, relativeDir: string) {

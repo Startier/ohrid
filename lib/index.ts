@@ -17,6 +17,10 @@ export type ServiceConfig = {
   amount?: number;
   settings?: Record<string, object | string | number | boolean>;
   driver?: string;
+  external?: {
+    path: string;
+    module: boolean;
+  };
 };
 
 export type Log = (

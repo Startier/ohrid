@@ -1,13 +1,13 @@
 import { Driver } from "../lib";
 import log from "./log";
 import { Config } from "./config";
-import { resolveBasePath } from "./resolve";
+import { resolveBasePath, resolvePath } from "./resolve";
 import { importResource } from "./imports";
 
 async function loadDriver(path: string, driverPath: string) {
   let driver: Driver | undefined;
   try {
-    log("debug", `Loading driver '${driverPath}'...`);
+    log("debug", `Loading driver '${path}/${driverPath}'...`);
     driver = await importResource<Driver, "driver">(
       `${path}/${driverPath}`,
       "driver"
@@ -38,12 +38,19 @@ export async function getDriverFromConfig(config: Config, name?: string) {
 
   log("debug", `Loading driver for '${name ?? "global"}'`);
   const services = config.services ?? {};
-  const path = resolveBasePath(config);
+
+  let path = resolveBasePath(config);
   if (
     name &&
     services[name].driver &&
     typeof services[name].driver === "string"
   ) {
+    if (services[name].external) {
+      path = services[name].external?.module
+        ? `${services[name].external?.path}`
+        : resolvePath(`${services[name].external?.path}`, config);
+    }
+
     driver = await loadDriver(path, services[name].driver!);
   } else if (config.driver) {
     driver = await loadDriver(path, config.driver);

@@ -4,7 +4,7 @@ import { Client, Method, ServiceConfig } from "../lib";
 import { resolve } from "path";
 import { getDriverFromConfig } from "./driver";
 import { runService } from "../lib/service";
-import { resolveBasePath } from "./resolve";
+import { resolveBasePath, resolvePath } from "./resolve";
 import { importResource } from "./imports";
 
 function getServiceConfig(name: string, config: Config): ServiceConfig {
@@ -37,6 +37,38 @@ export default async function start(name: string) {
   }
 
   const rpcMethods: Record<string, Method> = {};
+
+  for (const externalRpcMethod of config.importedMethods ?? []) {
+    const path = externalRpcMethod.module
+      ? `${externalRpcMethod.path}/rpc/${externalRpcMethod.method}`
+      : resolvePath(
+          `${externalRpcMethod.path}/rpc/${externalRpcMethod.method}`,
+          config
+        );
+    log("debug", `Checking external method '${path}'`);
+    const importedMethod = await importResource<Method, "method">(
+      path,
+      "method"
+    );
+
+    if (!importedMethod) {
+      log("error", `'${path}' has no export 'method' or 'default'`);
+      throw 1;
+    }
+
+    if (importedMethod.service !== name) {
+      continue;
+    }
+    if (rpcMethods[importedMethod.name]) {
+      log(
+        "error",
+        `'${path}' tries to redeclare an already declared RPC method`
+      );
+      throw 1;
+    } else {
+      rpcMethods[importedMethod.name] = importedMethod;
+    }
+  }
 
   for (const rpcMethodFile of await getFiles(`${path}/rpc`)) {
     try {
@@ -77,10 +109,21 @@ export default async function start(name: string) {
     log("info", `Loading entrypoint '${services[name].entrypoint}'...`);
 
     try {
+      let entrypointPath = "";
+      if (services[name].external) {
+        entrypointPath = services[name].external?.module
+          ? `${services[name].external?.path}/${services[name].entrypoint}`
+          : resolvePath(
+              `${services[name].external?.path}/${services[name].entrypoint}`,
+              config
+            );
+      } else {
+        entrypointPath = resolve(`${path}/${services[name].entrypoint}`);
+      }
       entrypoint = await importResource<
         (client: Client) => Promise<void | boolean>,
         "main"
-      >(resolve(`${path}/${services[name].entrypoint}`), "main");
+      >(entrypointPath, "main");
 
       if (!entrypoint) {
         throw 1;
