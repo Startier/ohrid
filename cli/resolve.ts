@@ -51,8 +51,8 @@ export async function getRelativeDirOfFile(file: string) {
   } while (resolve(relativeDir, "..") !== relativeDir);
 
   if (!(await readdir(relativeDir)).includes(file)) {
-    log("error", `Reached top of filesystem and couldn't find '${file}'`);
-    throw 1;
+    log("warning", `Reached top of filesystem and couldn't find '${file}'`);
+    return undefined;
   }
 
   return relativeDir;

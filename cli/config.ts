@@ -3,6 +3,10 @@ import { ServiceConfig } from "../lib";
 import { flags } from "./flags";
 import { resolveRelativeDir } from "./resolve";
 import { dumpFile, loadTextFile } from "./utils";
+import { readdir } from "fs/promises";
+
+export const getFiles = async (source: string) =>
+  (await readdir(source, { withFileTypes: true })).map((dirent) => dirent.name);
 
 export type Config = {
   path?: string;

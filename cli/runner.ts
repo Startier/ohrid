@@ -1,6 +1,5 @@
-import { readdir } from "fs/promises";
 import log from "./log";
-import { Config, getCurrentConfig } from "./config";
+import { Config, getCurrentConfig, getFiles } from "./config";
 import { Client, Method, ServiceConfig } from "../lib";
 import { resolve } from "path";
 import { getDriverFromConfig } from "./driver";
@@ -18,8 +17,6 @@ function getServiceConfig(name: string, config: Config): ServiceConfig {
   return config.services[name];
 }
 
-const getFiles = async (source: string) =>
-  (await readdir(source, { withFileTypes: true })).map((dirent) => dirent.name);
 export default async function start(name: string) {
   const config = await getCurrentConfig();
   log("info", `Loading service '${name}'...`);
