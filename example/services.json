@@ -1,6 +1,8 @@
 {
   "path": "../dist/example",
-  "import": ["other"],
+  "import": [
+    "other"
+  ],
   "driver": "@startier/ohrid-jsonrpc-driver",
   "docker": {
     "from": "node",
@@ -12,7 +14,8 @@
       "settings": {
         "environment": {
           "test": "Test"
-        }
+        },
+        "remoteHub": "http://localhost:1234"
       }
     }
   }

@@ -144,12 +144,16 @@ export default async function start(name: string) {
     } method(s)`
   );
 
-  const context = driver.createNode(
-    name,
-    getServiceConfig(name, config),
-    rpcMethods,
-    log
-  );
-
-  await runService(context, entrypoint);
+  try {
+    const context = driver.createNode(
+      name,
+      getServiceConfig(name, config),
+      rpcMethods,
+      log
+    );
+    await runService(context, entrypoint);
+  } catch (e) {
+    log("error", `Service setup failed: ${e}`);
+    throw 1;
+  }
 }
