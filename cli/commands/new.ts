@@ -14,7 +14,7 @@ export default async function createCommand(): Promise<Command> {
         description: "the resource that gets created",
         required: "enum",
         query: "What resource should get created?",
-        validValues: ["method", "service"],
+        validValues: ["method", "service", "driver"],
       },
     ],
     flags: [],

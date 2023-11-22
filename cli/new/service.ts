@@ -1,5 +1,5 @@
 import { mkdir } from "fs/promises";
-import { Config, getCurrentConfig } from "../config";
+import { getCurrentConfig } from "../config";
 import log from "../log";
 import { dumpFile, shouldGenerateTypescript } from "../utils";
 import { resolvePath } from "../resolve";
@@ -34,10 +34,8 @@ export default <Command>{
     const services = config.services ?? {};
 
     if (name in services) {
-      if (existsSync(resolvePath(`rpc/${name}/index.ts`, config))) {
-        log(`error`, "Resource already exists");
-        throw 1;
-      }
+      log(`error`, "Resource already exists");
+      throw 1;
     }
 
     config.services = config.services ?? {};
@@ -57,7 +55,7 @@ export default <Command>{
 
       const ts = await shouldGenerateTypescript(config);
       const entrypointFunction = `  
-  async function main(client${ts ? ": Client" : ""}) {} 
+async function main(client${ts ? ": Client" : ""}) {} 
   `;
       if (ts) {
         if (existsSync(resolvePath(`src/${entrypoint}/index.ts`, config))) {
@@ -66,9 +64,9 @@ export default <Command>{
         }
         await dumpFile(
           `
-  import type { Client } from "@startier/ohrid";
-  ${entrypointFunction}
-  ${exportType === "named" ? "export { main }" : "export default main"};    
+import type { Client } from "@startier/ohrid";
+${entrypointFunction}
+${exportType === "named" ? "export { main }" : "export default main"};    
   `.trim() + "\n",
           `src/${entrypoint}/index.ts`,
           config
@@ -80,9 +78,9 @@ export default <Command>{
         }
         await dumpFile(
           `
-  Object.defineProperty(exports, "__esModule", { value: true });
-  ${entrypointFunction}
-  ${exportType === "named" ? "exports.main = main" : "exports.default = main"};
+Object.defineProperty(exports, "__esModule", { value: true });
+${entrypointFunction}
+${exportType === "named" ? "exports.main = main" : "exports.default = main"};
   `.trim() + "\n",
           `src/${entrypoint}/index.js`,
           config
