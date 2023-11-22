@@ -1,5 +1,5 @@
 import { declareMethod } from "@startier/ohrid";
-import helloFromMain from "../hello-from-main";
+import helloFromMain from "../../../rpc/hello-from-main";
 
 export default declareMethod(
   "worker-2",

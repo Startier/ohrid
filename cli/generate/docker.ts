@@ -103,10 +103,6 @@ async function generateDockerCompose(
   args: Record<string, string>
 ) {
   const packageDir = await getPackageDirectory();
-  const relativePackagePath = relative(
-    resolve(packageDir),
-    resolve(config.relativeDir)
-  );
   const relativeToPackagePath = relative(
     resolve(config.relativeDir),
     resolve(packageDir)
@@ -148,7 +144,7 @@ async function generateDockerCompose(
             appendLine(`build:`);
             await block(async () => {
               appendLine(`context: ./${relativeToPackagePath}`);
-              appendLine(`dockerfile: ./${relativePackagePath}/Dockerfile`);
+              appendLine(`dockerfile: ./Dockerfile`);
             });
           }
           appendLine(`command: npx ohrid start ${service}`);
@@ -172,15 +168,11 @@ async function generateImageBuildScript(
   { image }: Record<string, string>
 ) {
   const packageDir = await getPackageDirectory();
-  const relativePackagePath = relative(
-    resolve(packageDir),
-    resolve(config.relativeDir)
-  );
   await dumpFile(
     `
 #!/bin/sh
-docker build  ${JSON.stringify(resolve(packageDir))} -f ${JSON.stringify(
-      `${relativePackagePath}/Dockerfile`
+docker build ${JSON.stringify(resolve(packageDir))} -f ${JSON.stringify(
+      `./Dockerfile`
     )} --tag ${image ?? config.docker?.image}
 `.trim(),
     "build-image.sh",

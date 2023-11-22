@@ -1,0 +1,15 @@
+{
+  "path": "../../dist/example/other",
+  "driver": "@startier/ohrid-jsonrpc-driver",
+  "services": {
+    "worker-2": {},
+    "main": {
+      "entrypoint": "src/index",
+      "settings": {
+        "hub": true,
+        "port": 1234
+      }
+    }
+  },
+  "export": ["hello-from-worker-2"]
+}

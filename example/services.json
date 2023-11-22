@@ -1,5 +1,6 @@
 {
   "path": "../dist/example",
+  "import": ["other"],
   "driver": "@startier/ohrid-jsonrpc-driver",
   "docker": {
     "from": "node",
@@ -7,23 +8,12 @@
     "image": "example"
   },
   "services": {
-    "main": {
-      "entrypoint": "src/index",
-      "settings": {
-        "hub": true,
-        "port": 1234
-      }
-    },
     "worker-1": {
-      "amount": 2,
       "settings": {
         "environment": {
           "test": "Test"
         }
       }
-    },
-    "worker-2": {
-      "amount": 5
     }
   }
 }
