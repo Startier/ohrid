@@ -1,7 +1,9 @@
-import main from "./main";
 import { waitForStreams } from "@mojsoski/streams";
+import { runProgram } from "./command";
+import createProgram from "./program";
 
-main(process.argv.slice(2))
+createProgram()
+  .then((program) => runProgram(program, process.argv.slice(2)))
   .then(async (exitCode) => {
     await waitForStreams();
     process.exit(exitCode ?? 0);
