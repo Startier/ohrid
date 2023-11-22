@@ -14,11 +14,14 @@ async function loadCommand(command: string) {
   return await createCommand();
 }
 
-const enabledCommands = ["generate", "help", "start"];
+const enabledCommands = ["generate", "help", "start", "init"];
 
 export async function createProgram(): Promise<Program> {
   return {
-    commands: await Promise.all(enabledCommands.map(loadCommand)),
+    commands: enabledCommands.map((command) => ({
+      prefix: command,
+      create: () => loadCommand(command),
+    })),
     helpCommand: "help",
     name: "ohrid",
     description: "Manage and develop distributed nodes.",

@@ -24,7 +24,7 @@ export type Command = {
 
 export type Program = {
   helpCommand: string;
-  commands: Command[];
+  commands: { prefix: string; create: () => Promise<Command> }[];
   name: string;
   description: string;
 };
@@ -118,8 +118,12 @@ export async function runProgram(
     }
     const commandName = args[0];
     for (const item of program.commands) {
-      if (item.name === commandName) {
-        return await executeCommand(program, item, args.slice(1));
+      if (item.prefix === commandName) {
+        return await executeCommand(
+          program,
+          await item.create(),
+          args.slice(1)
+        );
       }
     }
 

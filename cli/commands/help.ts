@@ -1,5 +1,5 @@
 import { Command, Program } from "../command";
-import log from "../log";
+import log, { disableNonError } from "../log";
 
 async function printCommand(
   command: Command,
@@ -99,6 +99,7 @@ async function printCommand(
 }
 
 export default async function createCommand(): Promise<Command> {
+  disableNonError();
   return {
     name: "help",
     description: "display this help and exit",
@@ -109,7 +110,7 @@ export default async function createCommand(): Promise<Command> {
       log("output", `${program.description}\n\n`);
       log("output", `The available commands are:\n`);
       for (const command of program.commands) {
-        await printCommand(command, program.name, program);
+        await printCommand(await command.create(), program.name, program);
       }
     },
   };
