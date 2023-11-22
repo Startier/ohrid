@@ -47,12 +47,20 @@ function formatter(log: LogMessage): string {
 
 const logger = createLogger<LogMessage>(formatter);
 commit(logger.copyToStream(subscriberFromWriteStream(process.stdout)));
+let nonErrorDisabled = false;
 export default ((
   type: "info" | "output" | "error" | "debug" | "warning",
   message: string
 ) => {
+  if (nonErrorDisabled && type !== "error" && type != "output") {
+    return;
+  }
   if (type === "debug" && process.env.NODE_ENV !== "development") {
     return;
   }
   logger.log({ type, message });
 }) as Log;
+
+export function disableNonError() {
+  nonErrorDisabled = true;
+}
