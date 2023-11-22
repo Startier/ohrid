@@ -57,7 +57,7 @@ export async function executeCommand(
 ): Promise<number | void> {
   if (args.length !== command.options.length) {
     log(
-      "warning",
+      "debug",
       `Got ${args.length} argument(s), while expecting ${command.options.length}`
     );
   }
