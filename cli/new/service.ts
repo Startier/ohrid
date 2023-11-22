@@ -4,10 +4,11 @@ import log from "../log";
 import { dumpFile, shouldGenerateTypescript } from "../utils";
 import { resolvePath } from "../resolve";
 import { Command, CommandOption } from "../command";
+import { existsSync } from "fs";
 
 export default <Command>{
   name: "service",
-  description: "generates services and entrypoints",
+  description: "creates services and entrypoints",
   options: [
     { name: "name", description: "the name of the service", required: true },
   ] as CommandOption[],
@@ -24,7 +25,7 @@ export default <Command>{
     },
     {
       name: "exports",
-      description: "export style for the generated module",
+      description: "export style for the created module",
       required: false,
     },
   ],
@@ -33,10 +34,10 @@ export default <Command>{
     const services = config.services ?? {};
 
     if (name in services) {
-      log(
-        "warning",
-        `The service '${name}' was already in 'services.json', configuration was overriden`
-      );
+      if (existsSync(resolvePath(`rpc/${name}/index.ts`, config))) {
+        log(`error`, "Resource already exists");
+        throw 1;
+      }
     }
 
     config.services = config.services ?? {};
@@ -59,6 +60,10 @@ export default <Command>{
   async function main(client${ts ? ": Client" : ""}) {} 
   `;
       if (ts) {
+        if (existsSync(resolvePath(`src/${entrypoint}/index.ts`, config))) {
+          log(`error`, "Resource already exists");
+          throw 1;
+        }
         await dumpFile(
           `
   import type { Client } from "@startier/ohrid";
@@ -69,6 +74,10 @@ export default <Command>{
           config
         );
       } else {
+        if (existsSync(resolvePath(`src/${entrypoint}/index.js`, config))) {
+          log(`error`, "Resource already exists");
+          throw 1;
+        }
         await dumpFile(
           `
   Object.defineProperty(exports, "__esModule", { value: true });

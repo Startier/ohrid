@@ -14,7 +14,7 @@ async function loadCommand(command: string) {
   return await createCommand();
 }
 
-const enabledCommands = ["generate", "help", "start", "init"];
+const enabledCommands = ["generate", "new", "help", "start", "init"];
 
 export async function createProgram(): Promise<Program> {
   return {

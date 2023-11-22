@@ -4,10 +4,11 @@ import log from "../log";
 import { dumpFile, shouldGenerateTypescript } from "../utils";
 import { resolvePath } from "../resolve";
 import { Command, CommandOption } from "../command";
+import { existsSync } from "fs";
 
 export default <Command>{
   name: "method",
-  description: "generates RPC methods",
+  description: "creates RPC methods",
   options: [
     { name: "name", description: "the name of the method", required: true },
   ] as CommandOption[],
@@ -19,7 +20,7 @@ export default <Command>{
     },
     {
       name: "exports",
-      description: "export style for the generated module",
+      description: "export style for the created module",
       required: false,
     },
   ],
@@ -42,6 +43,10 @@ export default <Command>{
   )}, async function ${name.replace(/[\W_]+/g, "_")}(client) {}); 
   `;
     if (await shouldGenerateTypescript(config)) {
+      if (existsSync(resolvePath(`rpc/${name}/index.ts`, config))) {
+        log(`error`, "Resource already exists");
+        throw 1;
+      }
       await dumpFile(
         `
   import { declareMethod } from "@startier/ohrid";
@@ -53,6 +58,11 @@ export default <Command>{
         config
       );
     } else {
+      if (existsSync(resolvePath(`rpc/${name}/index.js`, config))) {
+        log(`error`, "Resource already exists");
+        throw 1;
+      }
+
       await dumpFile(
         `
   Object.defineProperty(exports, "__esModule", { value: true });

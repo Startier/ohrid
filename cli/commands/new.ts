@@ -5,25 +5,25 @@ import log from "../log";
 
 export default async function createCommand(): Promise<Command> {
   return {
-    name: "generate",
-    description: "generate a resource",
+    name: "new",
+    description: "create a resource",
     returnsHelp: true,
     options: [
       {
         name: "resource",
-        description: "the resource that gets generated",
+        description: "the resource that gets created",
         required: "enum",
-        query: "What resource should get generated?",
-        validValues: ["docker"],
+        query: "What resource should get created?",
+        validValues: ["method", "service"],
       },
     ],
     flags: [],
     async execute({ resource }) {
       const config = await getCurrentConfig();
       try {
-        const importedItem = await importResource<Command, "generate">(
-          "./generate/" + resource,
-          "generate"
+        const importedItem = await importResource<Command, "create">(
+          "./new/" + resource,
+          "create"
         );
         if (!importedItem) {
           throw undefined;
@@ -32,7 +32,6 @@ export default async function createCommand(): Promise<Command> {
           return {
             ...importedItem,
             async execute(values, program) {
-              log("info", `Generating resource: ${resource}`);
               await importedItem.execute(values, program);
               await saveConfiguration(config);
             },
@@ -41,7 +40,7 @@ export default async function createCommand(): Promise<Command> {
           if (typeof e === "number") {
             throw e;
           }
-          log("error", `Generation failed: ${e}`);
+          log("error", `Creation failed: ${e}`);
         }
       } catch (e) {
         if (typeof e === "number") {
