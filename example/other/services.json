@@ -1,8 +1,11 @@
 {
   "path": "../../dist/example/other",
-  "driver": "@startier/ohrid-jsonrpc-driver",
   "services": {
-    "worker-2": {},
+    "worker-2": {
+      "settings": {
+        "remoteHub": "http://localhost:1234"
+      }
+    },
     "main": {
       "entrypoint": "src/index",
       "settings": {
