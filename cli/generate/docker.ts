@@ -1,9 +1,20 @@
-import { dumpFile } from "../utils";
-import { Config } from "../config";
+import { dumpFile, getPackageDirectory } from "../utils";
+import { Config, getCurrentConfig } from "../config";
 import { getDriverFromConfig } from "../driver";
 import log from "../log";
+import { relative, resolve } from "path";
+import { Command } from "../command";
 
-async function generateDockerfile(config: Config) {
+async function generateDockerfile(
+  config: Config,
+  args: Record<string, string>
+) {
+  const packageDir = await getPackageDirectory();
+  const relativePackagePath = relative(
+    resolve(packageDir),
+    resolve(config.relativeDir)
+  );
+
   const generateFromDriver = async (
     place:
       | "beforeDeps"
@@ -32,28 +43,26 @@ async function generateDockerfile(config: Config) {
     return result.trim();
   };
 
-  if (!config.docker) {
+  if (!config.docker && (!args.from || !args.script)) {
     log(
       "warning",
       `Docker configuration was not found, will use default settings that might not work`
     );
   }
-  const from = config.docker?.from ?? "node";
-  if (!config.docker?.from) {
+  const from = args.from ?? config.docker?.from ?? "node";
+  if (!config.docker?.from && !args.from) {
     log(
       "warning",
       `Docker source image configuration was not found, will default to 'node'`
     );
   }
-
-  if (!config.docker?.script) {
+  const script = args.script ?? config.docker?.script ?? "build";
+  if (!config.docker?.script && !args.script) {
     log(
       "warning",
       `Docker build script configuration not found, will default to 'build'`
     );
   }
-
-  const script = config.docker?.script ?? "build";
 
   const dockerfile = `
 FROM ${from} AS deps
@@ -82,14 +91,23 @@ ENV NODE_ENV production
 RUN adduser --system --group --home /app ohrid
 COPY --from=builder --chown=ohrid:ohrid /app /app
 USER ohrid
-WORKDIR /app
+WORKDIR /app/${relativePackagePath}
 ${await generateFromDriver("afterRunner")}
 `;
 
-  await dumpFile(dockerfile, "Dockerfile");
+  await dumpFile(dockerfile, "Dockerfile", config);
 }
 
-async function generateDockerCompose(config: Config) {
+async function generateDockerCompose(
+  config: Config,
+  args: Record<string, string>
+) {
+  const packageDir = await getPackageDirectory();
+  const relativeToPackagePath = relative(
+    resolve(config.relativeDir),
+    resolve(packageDir)
+  );
+
   let result = "";
   let spaces = 0;
 
@@ -120,10 +138,14 @@ async function generateDockerCompose(config: Config) {
         const dockerServiceName = `${service}-node-${idx}`;
         appendLine(`${dockerServiceName}:`);
         await block(async () => {
-          if (config.docker?.image) {
-            appendLine(`image: ${config.docker.image}`);
+          if (args.image || config.docker?.image) {
+            appendLine(`image: ${args.image ?? config.docker?.image}`);
           } else {
-            appendLine(`build: .`);
+            appendLine(`build:`);
+            await block(async () => {
+              appendLine(`context: ./${relativeToPackagePath}`);
+              appendLine(`dockerfile: ./Dockerfile`);
+            });
           }
           appendLine(`command: npx ohrid start ${service}`);
           await driver?.handleDockerCompose({
@@ -138,23 +160,53 @@ async function generateDockerCompose(config: Config) {
     }
   });
 
-  await dumpFile(result, "docker-compose.yml");
+  await dumpFile(result, "docker-compose.yml", config);
 }
 
-async function generateImageBuildScript(config: Config) {
+async function generateImageBuildScript(
+  config: Config,
+  { image }: Record<string, string>
+) {
+  const packageDir = await getPackageDirectory();
   await dumpFile(
     `
 #!/bin/sh
-docker build . --tag ${config.docker?.image}
+docker build ${JSON.stringify(resolve(packageDir))} -f ${JSON.stringify(
+      `./Dockerfile`
+    )} --tag ${image ?? config.docker?.image}
 `.trim(),
-    "build-image.sh"
+    "build-image.sh",
+    config
   );
 }
 
-export default async function generateDocker(config: Config) {
-  if (config.docker?.image) {
-    await generateImageBuildScript(config);
-  }
-  await generateDockerfile(config);
-  await generateDockerCompose(config);
-}
+export default <Command>{
+  name: "docker",
+  description: "generates docker-related files",
+  options: [],
+  flags: [
+    {
+      name: "from",
+      description: "the source image for the Dockerfile",
+      required: false,
+    },
+    {
+      name: "script",
+      description: "the npm build script that is used to build the code",
+      required: false,
+    },
+    {
+      name: "image",
+      description: "the name of the image that gets built",
+      required: false,
+    },
+  ],
+  async execute(values, _program) {
+    const config = await getCurrentConfig();
+    if (values.image ?? config.docker?.image) {
+      await generateImageBuildScript(config, values);
+    }
+    await generateDockerfile(config, values);
+    await generateDockerCompose(config, values);
+  },
+};

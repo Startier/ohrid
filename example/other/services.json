@@ -1,0 +1,18 @@
+{
+  "path": "../../dist/example/other",
+  "services": {
+    "worker-2": {
+      "settings": {
+        "remoteHub": "http://localhost:1234"
+      }
+    },
+    "main": {
+      "entrypoint": "src/index",
+      "settings": {
+        "hub": true,
+        "port": 1234
+      }
+    }
+  },
+  "export": ["hello-from-worker-2"]
+}

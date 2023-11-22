@@ -1,15 +1,10 @@
-import { Client, Driver, Method, ServiceConfig, client } from "../lib";
-import log from "./log";
+import { Client, Context, client } from "./index";
 
 export async function runService(
-  name: string,
-  config: ServiceConfig,
-  rpcMethods: Record<string, Method>,
-  driver: Driver,
+  context: Context,
   entrypoint?: (client: Client) => Promise<boolean | void>
 ) {
   try {
-    const context = driver.createNode(name, config, rpcMethods, log);
     const rpcClient = client(context);
     if (entrypoint) {
       try {
@@ -27,7 +22,7 @@ export async function runService(
             ? e.message
             : JSON.stringify(e);
 
-        log("error", `Entrypoint error: ${message}`);
+        context.log("error", `Entrypoint error: ${message}`);
         context.exit = true;
       }
     }
@@ -42,7 +37,7 @@ export async function runService(
         ? e.message
         : JSON.stringify(e);
 
-    log("error", `Error while creating service: ${message}`);
+    context.log("error", `Error while creating service: ${message}`);
     throw 1;
   }
 }
