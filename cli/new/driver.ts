@@ -30,22 +30,12 @@ export default <Command>{
 
     const baseMethod = ` 
 const driver${ts ? ": Driver" : ""} = {
-  createNode(name, config, _rpcMethods, log) {
-    const executeRemoteCalls =
-      typeof config.settings?.executeRemoteCalls === "boolean" &&
-      config.settings.executeRemoteCalls;
+  createNode(name, config, rpcMethods, log) {
     return {
       currentService: name,
       log,
       async remoteCall(method, ...params)${ts ? ": Promise<any>" : ""} {
-        if (!executeRemoteCalls) {
-          throw new Error("Remote call not supported");
-        }
-        return await method.createCaller({
-          currentService: method.service,
-          log: log,
-          remoteCall: this.remoteCall,
-        })(...params);
+        throw new Error("Remote call not implemented");
       },
     };
   },
