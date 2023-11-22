@@ -38,9 +38,9 @@ export default <Command>{
       (exports ?? config.exports) === "named" ? "named" : "default";
 
     const baseMethod = `  
-  const method = declareMethod(${JSON.stringify(
-    service
-  )}, async function ${name.replace(/[\W_]+/g, "_")}(client) {}); 
+const method = declareMethod(${JSON.stringify(
+      service
+    )}, async function ${name.replace(/[\W_]+/g, "_")}(client) {}); 
   `;
     if (await shouldGenerateTypescript(config)) {
       if (existsSync(resolvePath(`rpc/${name}/index.ts`, config))) {
@@ -49,30 +49,30 @@ export default <Command>{
       }
       await dumpFile(
         `
-  import { declareMethod } from "@startier/ohrid";
-  ${baseMethod}
-  ${exportType === "named" ? "export { method }" : "export default method"};
+import { declareMethod } from "@startier/ohrid";
+${baseMethod}
+${exportType === "named" ? "export { method }" : "export default method"};
   
     `.trim() + "\n",
         `rpc/${name}/index.ts`,
         config
       );
     } else {
-      if (existsSync(resolvePath(`rpc/${name}/index.js`, config))) {
+      if (existsSync(resolvePath(`rpc/${name}/index.ts`, config))) {
         log(`error`, "Resource already exists");
         throw 1;
       }
 
       await dumpFile(
         `
-  Object.defineProperty(exports, "__esModule", { value: true });
-  const { declareMethod } = require("@startier/ohrid");
-  ${baseMethod}
-  ${
-    exportType === "named"
-      ? "exports.method = method"
-      : "exports.default = method"
-  };
+Object.defineProperty(exports, "__esModule", { value: true });
+const { declareMethod } = require("@startier/ohrid");
+${baseMethod}
+${
+  exportType === "named"
+    ? "exports.method = method"
+    : "exports.default = method"
+};
     `.trim() + "\n",
         `rpc/${name}/index.js`,
         config
